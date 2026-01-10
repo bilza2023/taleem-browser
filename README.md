@@ -84,6 +84,8 @@ This is not an omission — it is a design choice.
 These concerns belong to **different layers or different libraries**.
 
 ---
+“Canonical slide styles live at src/styles/taleem.css and are shipped as a release asset.”
+---
 
 ## Relationship to other Taleem libraries
 

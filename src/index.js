@@ -1,5 +1,5 @@
-
 import { slideBuilder } from "taleem-slides";
+export * from "./release.js";
 
 /**
  * createTaleemBrowser
@@ -9,6 +9,7 @@ export function createTaleemBrowser({ mount, deck }) {
   if (!mount) {
     throw new Error("taleem-browser: mount is required");
   }
+
   if (!deck || !Array.isArray(deck.deck)) {
     throw new Error("taleem-browser: valid deck object required");
   }
@@ -23,7 +24,7 @@ export function createTaleemBrowser({ mount, deck }) {
   let currentIndex = 0;
   const total = deck.deck.length;
 
-  // build static DOM once
+  // static DOM shell
   root.innerHTML = `
     <div class="taleem-browser-bg"></div>
     <div class="taleem-browser-slide"></div>
@@ -32,10 +33,8 @@ export function createTaleemBrowser({ mount, deck }) {
   const bgEl = root.querySelector(".taleem-browser-bg");
   const slideEl = root.querySelector(".taleem-browser-slide");
 
-  // apply background from deck (browser-level responsibility)
   applyBackground(bgEl, deck.background);
 
-  // build slide renderer
   const manager = slideBuilder(deck);
 
   function render() {
@@ -74,7 +73,6 @@ export function createTaleemBrowser({ mount, deck }) {
     root.innerHTML = "";
   }
 
-  // initial render
   render();
 
   return {
@@ -88,9 +86,7 @@ export function createTaleemBrowser({ mount, deck }) {
   };
 }
 
-/* -----------------------------
-   helpers (internal only)
------------------------------- */
+/* internal helpers */
 
 function applyBackground(el, bg = {}) {
   el.style.position = "absolute";
