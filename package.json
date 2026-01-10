@@ -1,0 +1,39 @@
+{
+    "name": "taleem-browser",
+    "version": "0.1.0",
+    "description": "Pure index-based slide document browser for Taleem decks",
+    "type": "module",
+  
+    "main": "./src/index.js",
+    "exports": {
+      ".": "./src/index.js"
+    },
+  
+    "files": [
+      "src"
+    ],
+  
+    "scripts": {
+      "test": "vitest run"
+    },
+  
+    "peerDependencies": {
+      "taleem-slides": "^0.3.0"
+    },
+  
+    "devDependencies": {
+      "vitest": "^1.6.0",
+      "jsdom": "^24.0.0"
+    },
+  
+    "keywords": [
+      "slides",
+      "presentation",
+      "education",
+      "browser",
+      "taleem"
+    ],
+  
+    "license": "MIT"
+  }
+  
