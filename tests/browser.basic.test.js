@@ -15,6 +15,6 @@ describe("taleem-browser – basic", () => {
 
     const slide = document.querySelector(".taleem-browser-slide");
     expect(slide).toBeTruthy();
-    expect(slide.innerHTML.length).toBeGreaterThan(0);
+    expect(slide.innerHTML).toContain("A");
   });
 });

@@ -1,46 +1,46 @@
-
+// tests/browser.navigation.test.js
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { createTaleemBrowser } from "../src/index.js";
 import { deck } from "./_fixtures/deck.js";
 
 describe("taleem-browser – navigation", () => {
+  let slide;
   let browser;
 
   beforeEach(() => {
     document.body.innerHTML = `<div id="app"></div>`;
+
     browser = createTaleemBrowser({
       mount: "#app",
       deck
     });
+
+    slide = document.querySelector(".taleem-browser-slide");
   });
 
-  it("starts at index 0", () => {
-    expect(browser.getIndex()).toBe(0);
+  it("starts on first slide", () => {
+    expect(slide.innerHTML).toContain("A");
   });
 
-  it("moves next()", () => {
+  it("next() moves forward", () => {
     browser.next();
-    expect(browser.getIndex()).toBe(1);
+    expect(slide.innerHTML).toContain("B");
   });
 
-  it("moves prev()", () => {
+  it("prev() moves backward", () => {
     browser.next();
     browser.prev();
-    expect(browser.getIndex()).toBe(0);
+    expect(slide.innerHTML).toContain("A");
   });
 
-  it("goTo(index) works", () => {
+  it("goTo(index) jumps correctly", () => {
     browser.goTo(2);
-    expect(browser.getIndex()).toBe(2);
+    expect(slide.innerHTML).toContain("C");
   });
 
-  it("does not go out of bounds", () => {
+  it("goTo(out of bounds) does nothing", () => {
     browser.goTo(999);
-    expect(browser.getIndex()).toBe(0);
-  });
-
-  it("reports total slides", () => {
-    expect(browser.getTotal()).toBe(3);
+    expect(slide.innerHTML).toContain("A");
   });
 });

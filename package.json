@@ -1,6 +1,6 @@
 {
   "name": "taleem-browser",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "Pure JSON slide browser for taleem-slides (index-based, no timing).",
   "type": "module",
   "main": "./dist/taleem-browser.umd.js",
@@ -16,13 +16,16 @@
     "dist"
   ],
   "scripts": {
-    "build": "node ./scripts/build.js"
+    "build": "node ./scripts/build.js",
+    "test": "vitest"
   },
   "dependencies": {
     "taleem-slides": "^0.3.0"
   },
-  "license": "MIT",
   "devDependencies": {
-    "esbuild": "^0.27.2"
-  }
+    "esbuild": "^0.27.2",
+    "vitest": "^1.6.0",
+    "jsdom": "^24.0.0"
+  },
+  "license": "MIT"
 }
