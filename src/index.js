@@ -1,2 +1,5 @@
 
-export { createTaleemBrowser } from "./browser/createBrowser.js";
+
+
+
+export { createTaleemBrowser } from "./createBrowser.js";

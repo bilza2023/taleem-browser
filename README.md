@@ -1,188 +1,81 @@
 
 # taleem-browser
 
-**taleem-browser** provides a simple and reliable way to display **JSON-based slide decks** in the browser.
+**taleem-browser** is a small, reliable JavaScript library for displaying
+**JSON-based Taleem slide decks** in the browser.
 
-It is designed for:
-- students  
-- teachers  
-- academics  
-- anyone who wants structured, content-driven slides without complex tools  
+It is intentionally simple.
 
-At its core, `taleem-browser` does one thing well:
+> **Given a valid deck and an index, it renders that slide into the DOM.**
 
-> **Take a slide deck written in JSON and display it as slides.**
-
-You give it a valid deck, and it renders the slides — one at a time — into the page.
-
-That’s it.
-
-There is no autoplay, no animation system, and no timing dependency.  
-Slides always render, regardless of how simple or complex the deck is.
+No timing.  
+No autoplay.  
+No hidden state.
 
 ---
 
-## Core idea
+## Why taleem-browser exists
 
-A slide deck is treated as a **document**, not a video or animation.
+Most slide systems mix too many responsibilities:
+- rendering
+- timing
+- navigation
+- animation
+- state
+- UI controls
 
-Slides are shown in a fixed order, and the browser moves between them by position (previous, next, or jump to a slide).
+`taleem-browser` deliberately avoids this.
 
-This makes slide creation:
-- predictable  
-- easy to debug  
-- safe to modify  
-- suitable for learning and teaching material  
+It treats a slide deck as a **document**, not a video.
 
-You focus on **content and structure**.  
-`taleem-browser` handles display and navigation.
+This makes it:
+- predictable
+- easy to debug
+- easy to test
+- safe for educational content
+- reusable in any UI or framework
 
 ---
 
-## What this library does
+## What it is
+
+`taleem-browser` is:
+
+- an **index-based slide viewer**
+- a **thin DOM wrapper**
+- a **consumer of Taleem decks**
+- a **renderer, not a player**
+
+You decide *which slide index to show*.  
+The browser renders it.
+
+---
+
+## What it does
 
 `taleem-browser`:
 
 - Accepts a **deck JSON object**
-- Uses `taleem-slides` to render slides into HTML
-- Owns a single DOM mount point
+- Uses **taleem-slides** to convert slide JSON into HTML
+- Injects a fixed DOM structure into a mount point
 - Displays **exactly one slide at a time**
-- Navigates slides by **index**
-- Always succeeds at rendering valid content
+- Renders slides **by numeric index**
+- Never mutates the deck
+- Throws immediately on invalid slide types
 
-The public API is intentionally small:
+The API is intentionally small and stable.
 
-```js
-browser.next()
-browser.prev()
-browser.goTo(index)
-browser.render()
+---
+
+## Installation
+
+```bash
+npm install taleem-browser
 ````
 
-That’s the entire contract.
-
-There are **no state getters** and **no lifecycle hooks** exposed.
-The browser is controlled purely by commands, and verified by what appears in the DOM.
-
 ---
 
-## What this library intentionally does NOT do
-
-This is not an omission — it is a design choice.
-
-`taleem-browser` does **not**:
-
-* interpret `start`, `end`, or `showAt`
-* manage time, intervals, or autoplay
-* perform animations or transitions
-* sync audio or narration
-* expose internal state (index, total, slides)
-* depend on any framework (React, Svelte, Vue, etc.)
-* grow configuration options endlessly
-
-These concerns belong to **different layers or different libraries**.
-
----
-
-## Styling
-
-Canonical slide styles live in:
-
-```
-src/styles/taleem.css
-```
-
-They are bundled and shipped as part of the release assets.
-
-The browser does not generate styles dynamically.
-Styling is deterministic, inspectable, and override-friendly.
-
----
-
-## Relationship to other Taleem libraries
-
-`taleem-browser` is part of a small, layered ecosystem.
-
-### Lower-level libraries
-
-**taleem-core**
-Defines deck schemas, validation rules, and core concepts.
-📄 API reference:
-[https://github.com/bilza2023/taleem-core/blob/master/docs/api.md](https://github.com/bilza2023/taleem-core/blob/master/docs/api.md)
-
-**taleem-slides**
-Converts slide JSON into HTML.
-This is the renderer used internally by `taleem-browser`.
-🔗 Repository:
-[https://github.com/bilza2023/taleem-slides](https://github.com/bilza2023/taleem-slides)
-
-`taleem-browser` sits **above** these libraries so users do not need to wire renderers or schemas manually.
-
-If you want low-level control over rendering, use `taleem-slides` directly.
-If you want a **ready-to-use slide viewer**, use `taleem-browser`.
-
----
-
-## Example deck (gold standard)
-
-A complete, production-quality example deck is available here:
-
-🔗 **Demo gold-standard deck**
-[https://github.com/bilza2023/taleem/blob/master/decks/demo-gold.json](https://github.com/bilza2023/taleem/blob/master/decks/demo-gold.json)
-
-This deck is used as a reference for:
-
-* slide layout
-* spacing
-* typography
-* JSON structure
-
----
-
-## Advanced playback (out of scope)
-
-Timed playback, animations, narration, or video-like behavior are **explicitly out of scope** for this library.
-
-Timing-related fields such as `start`, `end`, and `showAt` are treated as **metadata**, not requirements.
-
-For deeper reading on timing concepts and EQ-style slides:
-
-* 📄 EQ slide format (advanced, optional):
-  [https://github.com/bilza2023/taleem-core/blob/master/docs/eq.md](https://github.com/bilza2023/taleem-core/blob/master/docs/eq.md)
-
-* 📄 Timing rules (for playback layers, not the browser):
-  [https://github.com/bilza2023/taleem-core/blob/master/docs/timings.md](https://github.com/bilza2023/taleem-core/blob/master/docs/timings.md)
-
-A future playback layer (e.g. `taleem-player`) may interpret these fields, but `taleem-browser` never depends on them.
-
----
-
-## Project discipline (important)
-
-To keep the core strong, we follow strict rules.
-
-### ❌ Things we do NOT do
-
-* Do **not** add new slide types casually
-* Do **not** add timing or playback logic
-* Do **not** blur browser and player responsibilities
-* Do **not** expose internal state
-* Do **not** grow the API
-* Do **not** chase frameworks or trends
-
-### ✅ Things we focus on
-
-* More example decks
-* CSS and rendering bug fixes
-* Navigation correctness
-* Documentation clarity
-* Stability over novelty
-
-Every “no” protects the core.
-
----
-
-## Minimal usage
+## Basic usage
 
 ```js
 import { createTaleemBrowser } from "taleem-browser";
@@ -193,36 +86,166 @@ const browser = createTaleemBrowser({
   deck
 });
 
-browser.next();
-browser.prev();
-browser.goTo(3);
+browser.render(0);   // render first slide
+browser.render(1);   // render second slide
 ```
+
+---
+
+## Public API
+
+### `createTaleemBrowser(options)`
+
+Creates a browser instance.
+
+```ts
+createTaleemBrowser({
+  mount: HTMLElement | string,
+  deck: TaleemDeck
+})
+```
+
+#### Parameters
+
+* `mount`
+  A DOM element or a CSS selector where slides will be rendered.
+
+* `deck`
+  A **valid Taleem deck JSON object**.
+
+---
+
+### `browser.render(index)`
+
+Renders the slide at the given index.
+
+```js
+browser.render(3);
+```
+
+* Index is zero-based
+* Out-of-range indexes are ignored
+* Rendering always replaces previous slide content
+
+---
+
+### `browser.getTotal()`
+
+Returns the total number of slides in the deck.
+
+```js
+const total = browser.getTotal();
+```
+
+---
+
+## DOM contract
+
+`taleem-browser` injects the following structure into the mount element:
+
+```html
+<div class="taleem-browser-bg"></div>
+<div class="taleem-browser-slide"></div>
+```
+
+### Meaning
+
+* `.taleem-browser-bg`
+  Deck-level background layer
+
+* `.taleem-browser-slide`
+  Container for the rendered slide HTML
+
+These class names are **public and stable** and may be styled by consumers.
+
+---
+
+## Styling
+
+`taleem-browser` does **not** generate slide styles.
+
+Slide HTML and CSS are defined by **taleem-slides** and/or the consuming application.
+
+This ensures:
+
+* deterministic output
+* inspectable markup
+* no runtime styling surprises
+
+---
+
+## What this library intentionally does NOT do
+
+This is a design choice, not a limitation.
+
+`taleem-browser` does **not**:
+
+* interpret timing (`start`, `end`, `showAt`)
+* manage playback or autoplay
+* handle animations or transitions
+* validate slide field content
+* expose internal state
+* provide UI controls
+* depend on any framework (React, Svelte, Vue, etc.)
+
+These concerns belong to **other layers**.
+
+---
+
+## Relationship to other Taleem libraries
+
+`taleem-browser` is part of a layered ecosystem.
+
+### taleem-core
+
+Defines deck schemas and validation rules.
+
+### taleem-slides
+
+Converts slide JSON into HTML templates.
+Used internally by `taleem-browser`.
+
+`taleem-browser` sits **above** these libraries to provide
+a ready-to-use, index-based slide viewer.
+
+If you need:
+
+* schema validation → use `taleem-core`
+* raw HTML rendering → use `taleem-slides`
+* timed playback or narration → use a playback layer (e.g. `taleem-player`)
+
+---
+
+## Testing philosophy
+
+`taleem-browser` tests **do not validate decks or slides**.
+
+Tests use a **minimal, known-valid deck** to verify:
+
+* DOM injection
+* template resolution
+* deterministic rendering
+* index-based behavior
+
+Slide correctness is explicitly **out of scope** for this library.
 
 ---
 
 ## Design philosophy
 
-* Slides are **content-first**
+* Slides are documents
 * Index is more fundamental than time
-* Rendering should never fail
-* Static viewing is the default
-* Playback is an optional interpretation
+* Rendering should be deterministic
+* State belongs to the caller
+* Small libraries stay correct longer
 
-> **Slides are documents.
-> Timing is an optional playback layer.**
-
----
-
-## Related project (optional)
-
-`taleem-browser` is actively used in the **Taleem demo project**, which showcases real decks, layouts, and usage patterns as they evolve.
-
-The demo project is provided as a reference, not a dependency:
-
-[https://github.com/bilza2023/taleem](https://github.com/bilza2023/taleem)
+> **Render by index.
+> Everything else is interpretation.**
 
 ---
 
 ## License
 
 MIT
+
+

@@ -1,26 +1,19 @@
 // node_modules/taleem-slides/src/slides/TitleSlide.js
 var TitleSlide = {
   type: "titleSlide",
-  /**
-   * Build a TitleSlide from raw deck JSON
-   */
-  fromJSON(rawSlide, index) {
-    if (!Array.isArray(rawSlide.data)) {
-      throw new Error(`TitleSlide: data must be an array`);
+  fromJSON(raw) {
+    const title = raw.data?.find((d) => d.name === "title")?.content;
+    if (!title) {
+      throw new Error("titleSlide: requires title");
     }
-    const titleItem = rawSlide.data.find((d) => d.name === "title");
-    if (!titleItem || typeof titleItem.content !== "string") {
-      throw new Error(`TitleSlide: missing or invalid title content`);
-    }
-    const title = titleItem.content;
     return Object.freeze({
       type: "titleSlide",
       render() {
         return `
-            <div class="slide titleSlide">
-              <h1>${title}</h1>
-            </div>
-          `;
+          <section class="slide titleSlide">
+            <h1>${title}</h1>
+          </section>
+        `;
       }
     });
   }
@@ -39,11 +32,11 @@ var TitleAndSubtitleSlide = {
       type: "titleAndSubtitle",
       render() {
         return `
-            <section class="slide titleAndSubtitle">
-              <h1>${title}</h1>
-              <h2>${subtitle}</h2>
-            </section>
-          `;
+          <section class="slide titleAndSubtitle">
+            <h1>${title}</h1>
+            <h2>${subtitle}</h2>
+          </section>
+        `;
       }
     });
   }
@@ -62,11 +55,11 @@ var TitleAndParaSlide = {
       type: "titleAndPara",
       render() {
         return `
-            <section class="slide titleAndPara">
-              <h1>${title}</h1>
-              <p>${para}</p>
-            </section>
-          `;
+          <section class="slide titleAndPara">
+            <h1>${title}</h1>
+            <p>${para}</p>
+          </section>
+        `;
       }
     });
   }
@@ -82,14 +75,19 @@ var BulletListSlide = {
     }
     return Object.freeze({
       type: "bulletList",
-      render() {
+      bullets,
+      render({ visibleCount = bullets.length, activeIndex = null } = {}) {
         return `
-            <section class="slide bulletList">
-              <ul>
-                ${bullets.map((b) => `<li>${b}</li>`).join("")}
-              </ul>
-            </section>
-          `;
+          <section class="slide bulletList">
+            <ul>
+              ${bullets.map((text, i) => {
+          if (i >= visibleCount) return "";
+          const cls = i === activeIndex ? "is-active" : activeIndex !== null && i < activeIndex ? "is-dim" : "";
+          return `<li class="${cls}">${text}</li>`;
+        }).join("")}
+            </ul>
+          </section>
+        `;
       }
     });
   }
@@ -102,17 +100,21 @@ var TwoColumnTextSlide = {
     const left = raw.data?.filter((d) => d.name === "left").map((d) => d.content);
     const right = raw.data?.filter((d) => d.name === "right").map((d) => d.content);
     if (!left?.length || !right?.length) {
-      throw new Error("twoColumnText: requires left and right columns");
+      throw new Error("twoColumnText: requires left and right");
     }
     return Object.freeze({
       type: "twoColumnText",
       render() {
         return `
-            <section class="slide twoColumnText">
-              <div class="col left">${left.join("<br/>")}</div>
-              <div class="col right">${right.join("<br/>")}</div>
-            </section>
-          `;
+          <section class="slide twoColumnText">
+            <div class="col left">
+              ${left.map((v) => `<div>${v}</div>`).join("")}
+            </div>
+            <div class="col right">
+              ${right.map((v) => `<div>${v}</div>`).join("")}
+            </div>
+          </section>
+        `;
       }
     });
   }
@@ -126,12 +128,13 @@ var ImageSlide = {
     if (!src) throw new Error("imageSlide: image required");
     return Object.freeze({
       type: "imageSlide",
+      src,
       render() {
         return `
-            <section class="slide imageSlide">
-              <img src="${src}" alt="" />
-            </section>
-          `;
+          <section class="slide imageSlide">
+            <img src="${src}" alt="" />
+          </section>
+        `;
       }
     });
   }
@@ -147,12 +150,13 @@ var FillImageSlide = {
     }
     return Object.freeze({
       type: "fillImage",
+      image,
       render() {
         return `
-            <section class="slide fillImage">
-              <img src="${image}" alt="" />
-            </section>
-          `;
+          <section class="slide fillImage">
+            <img src="${image}" alt="" />
+          </section>
+        `;
       }
     });
   }
@@ -169,13 +173,15 @@ var ImageWithTitleSlide = {
     }
     return Object.freeze({
       type: "imageWithTitle",
+      src,
+      title,
       render() {
         return `
-            <section class="slide imageWithTitle">
-              <img src="${src}" alt="" />
-              <h1>${title}</h1>
-            </section>
-          `;
+          <section class="slide imageWithTitle">
+            <img src="${src}" alt="" />
+            <h1>${title}</h1>
+          </section>
+        `;
       }
     });
   }
@@ -192,13 +198,15 @@ var ImageWithCaptionSlide = {
     }
     return Object.freeze({
       type: "imageWithCaption",
+      src,
+      caption,
       render() {
         return `
-            <figure class="slide imageWithCaption">
-              <img src="${src}" alt="" />
-              <figcaption>${caption}</figcaption>
-            </figure>
-          `;
+          <figure class="slide imageWithCaption">
+            <img src="${src}" alt="" />
+            <figcaption>${caption}</figcaption>
+          </figure>
+        `;
       }
     });
   }
@@ -210,20 +218,24 @@ var ImageLeftBulletsRightSlide = {
   fromJSON(raw) {
     const image = raw.data?.find((d) => d.name === "image")?.content;
     const bullets = raw.data?.filter((d) => d.name === "bullet").map((d) => d.content);
-    if (!image || !bullets?.length) {
+    if (!image || !bullets || bullets.length === 0) {
       throw new Error("imageLeftBulletsRight: image and bullets required");
     }
     return Object.freeze({
       type: "imageLeftBulletsRight",
-      render() {
+      image,
+      bullets,
+      render({ visibleCount = bullets.length } = {}) {
         return `
-            <section class="slide imageLeftBulletsRight">
-              <img src="${image}" alt="" />
-              <ul>
-                ${bullets.map((b) => `<li>${b}</li>`).join("")}
-              </ul>
-            </section>
-          `;
+          <section class="slide imageLeftBulletsRight">
+            <img src="${image}" alt="" />
+            <ul>
+              ${bullets.map(
+          (text, i) => i < visibleCount ? `<li>${text}</li>` : ""
+        ).join("")}
+            </ul>
+          </section>
+        `;
       }
     });
   }
@@ -235,20 +247,24 @@ var ImageRightBulletsLeftSlide = {
   fromJSON(raw) {
     const image = raw.data?.find((d) => d.name === "image")?.content;
     const bullets = raw.data?.filter((d) => d.name === "bullet").map((d) => d.content);
-    if (!image || !bullets?.length) {
+    if (!image || !bullets || bullets.length === 0) {
       throw new Error("imageRightBulletsLeft: image and bullets required");
     }
     return Object.freeze({
       type: "imageRightBulletsLeft",
-      render() {
+      image,
+      bullets,
+      render({ visibleCount = bullets.length } = {}) {
         return `
-            <section class="slide imageRightBulletsLeft">
-              <ul>
-                ${bullets.map((b) => `<li>${b}</li>`).join("")}
-              </ul>
-              <img src="${image}" alt="" />
-            </section>
-          `;
+          <section class="slide imageRightBulletsLeft">
+            <ul>
+              ${bullets.map(
+          (text, i) => i < visibleCount ? `<li>${text}</li>` : ""
+        ).join("")}
+            </ul>
+            <img src="${image}" alt="" />
+          </section>
+        `;
       }
     });
   }
@@ -258,20 +274,26 @@ var ImageRightBulletsLeftSlide = {
 var TableSlide = {
   type: "table",
   fromJSON(raw) {
-    const rows = raw.data?.filter((d) => d.name === "row").map((d) => d.content);
-    if (!rows || rows.length === 0) {
-      throw new Error("table: requires at least one row");
+    const headers = raw.data?.find((d) => d.name === "header")?.content;
+    const rows = raw.data?.find((d) => d.name === "row")?.content;
+    if (!headers || !rows?.length) {
+      throw new Error("table: requires headers and at least one row");
     }
     return Object.freeze({
       type: "table",
       render() {
         return `
-            <table class="slide table">
+          <table class="slide table">
+            <thead>
+              <tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr>
+            </thead>
+            <tbody>
               ${rows.map(
-          (row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`
+          (r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`
         ).join("")}
-            </table>
-          `;
+            </tbody>
+          </table>
+        `;
       }
     });
   }
@@ -282,19 +304,21 @@ var StatisticSlide = {
   type: "statistic",
   fromJSON(raw) {
     const label = raw.data?.find((d) => d.name === "label")?.content;
-    const value = raw.data?.find((d) => d.name === "value")?.content;
-    if (!label || value === void 0) {
-      throw new Error("statistic: requires label and value");
+    const number = raw.data?.find((d) => d.name === "number")?.content;
+    if (!label || number === void 0) {
+      throw new Error("statistic: requires number and label");
     }
     return Object.freeze({
       type: "statistic",
+      label,
+      number,
       render() {
         return `
-            <section class="slide statistic">
-              <div class="stat-value">${value}</div>
-              <div class="stat-label">${label}</div>
-            </section>
-          `;
+          <section class="slide statistic">
+            <div class="stat-value">${number}</div>
+            <div class="stat-label">${label}</div>
+          </section>
+        `;
       }
     });
   }
@@ -304,18 +328,22 @@ var StatisticSlide = {
 var BigNumberSlide = {
   type: "bigNumber",
   fromJSON(raw) {
-    const value = raw.data?.find((d) => d.name === "number")?.content;
+    const number = raw.data?.find((d) => d.name === "number")?.content;
     const label = raw.data?.find((d) => d.name === "label")?.content;
-    if (!value) throw new Error("bigNumber: number required");
+    if (!number) {
+      throw new Error("bigNumber: number required");
+    }
     return Object.freeze({
       type: "bigNumber",
+      number,
+      label,
       render() {
         return `
-            <section class="slide bigNumber">
-              <div class="number">${value}</div>
-              ${label ? `<div class="label">${label}</div>` : ""}
-            </section>
-          `;
+          <section class="slide bigNumber">
+            <div class="number">${number}</div>
+            ${label ? `<div class="label">${label}</div>` : ""}
+          </section>
+        `;
       }
     });
   }
@@ -325,32 +353,33 @@ var BigNumberSlide = {
 var BarChartSlide = {
   type: "barChart",
   fromJSON(raw) {
-    const bars = raw.data?.filter((d) => d.name === "bar");
+    const bars = raw.data?.filter((d) => d.name === "bar").map((d) => ({
+      label: d.label,
+      value: d.value
+    }));
     if (!bars || bars.length === 0) {
       throw new Error("barChart: requires at least one bar");
     }
-    bars.forEach((b, i) => {
-      if (typeof b.content !== "object" || typeof b.content.label !== "string" || typeof b.content.value !== "number") {
-        throw new Error(`barChart: invalid bar at index ${i}`);
-      }
-    });
     return Object.freeze({
       type: "barChart",
-      render() {
+      bars,
+      render({ visibleCount = bars.length, activeIndex = null } = {}) {
         return `
-            <section class="slide barChart">
-              <ul class="bars">
-                ${bars.map(
-          (b) => `
-                    <li class="bar">
-                      <span class="bar-label">${b.content.label}</span>
-                      <span class="bar-value">${b.content.value}</span>
-                    </li>
-                  `
-        ).join("")}
-              </ul>
-            </section>
-          `;
+          <section class="slide barChart">
+            <ul class="bars">
+              ${bars.map((b, i) => {
+          if (i >= visibleCount) return "";
+          const cls = i === activeIndex ? "is-active" : activeIndex !== null && i < activeIndex ? "is-dim" : "";
+          return `
+                  <li class="bar ${cls}">
+                    <span class="bar-label">${b.label}</span>
+                    <span class="bar-value">${b.value}</span>
+                  </li>
+                `;
+        }).join("")}
+            </ul>
+          </section>
+        `;
       }
     });
   }
@@ -360,22 +389,35 @@ var BarChartSlide = {
 var DonutChartSlide = {
   type: "donutChart",
   fromJSON(raw) {
-    const segments = raw.data?.filter((d) => d.name === "segment");
-    if (!segments || segments.length === 0) {
+    const segments = [];
+    let current = null;
+    for (const d of raw.data || []) {
+      if (d.name === "percent") {
+        current = { percent: d.content };
+        segments.push(current);
+      } else if (current && d.name === "label") {
+        current.label = d.content;
+      } else if (current && d.name === "color") {
+        current.color = d.content;
+      }
+    }
+    if (!segments.length) {
       throw new Error("donutChart: requires at least one segment");
     }
     return Object.freeze({
       type: "donutChart",
-      render() {
+      segments,
+      render({ visibleCount = segments.length } = {}) {
         return `
-            <section class="slide donutChart">
-              <ul>
-                ${segments.map(
-          (s) => `<li>${s.content.label}: ${s.content.value}</li>`
-        ).join("")}
-              </ul>
-            </section>
-          `;
+          <section class="slide donutChart">
+            <ul>
+              ${segments.map((s, i) => {
+          if (i >= visibleCount) return "";
+          return `<li>${s.label}: ${s.percent}%</li>`;
+        }).join("")}
+            </ul>
+          </section>
+        `;
       }
     });
   }
@@ -385,18 +427,22 @@ var DonutChartSlide = {
 var QuoteSlide = {
   type: "quoteSlide",
   fromJSON(raw) {
-    const text = raw.data?.find((d) => d.name === "quote")?.content;
+    const quote = raw.data?.find((d) => d.name === "quote")?.content;
     const author = raw.data?.find((d) => d.name === "author")?.content;
-    if (!text) throw new Error("quoteSlide: quote required");
+    if (!quote) {
+      throw new Error("quoteSlide: quote required");
+    }
     return Object.freeze({
       type: "quoteSlide",
+      quote,
+      author,
       render() {
         return `
-            <blockquote class="slide quoteSlide">
-              <p>${text}</p>
-              ${author ? `<footer>${author}</footer>` : ""}
-            </blockquote>
-          `;
+          <blockquote class="slide quoteSlide">
+            <p>${quote}</p>
+            ${author ? `<footer>${author}</footer>` : ""}
+          </blockquote>
+        `;
       }
     });
   }
@@ -414,16 +460,19 @@ var QuoteWithImageSlide = {
     }
     return Object.freeze({
       type: "quoteWithImage",
+      quote,
+      image,
+      author,
       render() {
         return `
-            <section class="slide quoteWithImage">
-              <img src="${image}" alt="" />
-              <blockquote>
-                <p>${quote}</p>
-                ${author ? `<footer>${author}</footer>` : ""}
-              </blockquote>
-            </section>
-          `;
+          <section class="slide quoteWithImage">
+            <img src="${image}" alt="" />
+            <blockquote>
+              <p>${quote}</p>
+              ${author ? `<footer>${author}</footer>` : ""}
+            </blockquote>
+          </section>
+        `;
       }
     });
   }
@@ -433,20 +482,27 @@ var QuoteWithImageSlide = {
 var CornerWordsSlide = {
   type: "cornerWordsSlide",
   fromJSON(raw) {
-    const words = raw.data?.filter((d) => d.name === "word").map((d) => d.content);
-    if (!words || words.length === 0) {
-      throw new Error("cornerWordsSlide: requires at least one word");
+    const cards = raw.data?.filter((d) => d.name === "card").map((d) => ({ icon: d.icon, label: d.label }));
+    if (!cards || cards.length === 0) {
+      throw new Error("cornerWordsSlide: requires at least one card");
     }
     return Object.freeze({
       type: "cornerWordsSlide",
-      render() {
+      cards,
+      render({ visibleCount = cards.length } = {}) {
         return `
-            <section class="slide cornerWordsSlide">
-              ${words.map(
-          (w, i) => `<span class="corner-word corner-${i + 1}">${w}</span>`
-        ).join("")}
-            </section>
-          `;
+          <section class="slide cornerWordsSlide">
+            ${cards.map((c, i) => {
+          if (i >= visibleCount) return "";
+          return `
+                <span class="corner-card corner-${i + 1}">
+                  <span class="icon">${c.icon}</span>
+                  <span class="label">${c.label}</span>
+                </span>
+              `;
+        }).join("")}
+          </section>
+        `;
       }
     });
   }
@@ -456,16 +512,19 @@ var CornerWordsSlide = {
 var ContactSlide = {
   type: "contactSlide",
   fromJSON(raw) {
-    const items = raw.data?.map((d) => `<div>${d.content}</div>`);
-    if (!items?.length) throw new Error("contactSlide: content required");
+    const items = raw.data?.map((d) => d.content);
+    if (!items || items.length === 0) {
+      throw new Error("contactSlide: content required");
+    }
     return Object.freeze({
       type: "contactSlide",
+      items,
       render() {
         return `
-            <section class="slide contactSlide">
-              ${items.join("")}
-            </section>
-          `;
+          <section class="slide contactSlide">
+            ${items.map((text) => `<div>${text}</div>`).join("")}
+          </section>
+        `;
       }
     });
   }
@@ -475,43 +534,33 @@ var ContactSlide = {
 var EqSlide = {
   type: "eq",
   fromJSON(raw) {
-    if (!Array.isArray(raw.data)) {
-      throw new Error("eq: data must be array");
+    const lines = raw.data?.filter((d) => d.name === "line").map((d) => ({
+      type: d.type,
+      content: d.content
+    }));
+    if (!lines || lines.length === 0) {
+      throw new Error("eq: requires at least one line");
     }
     return Object.freeze({
       type: "eq",
-      render() {
+      lines,
+      render({ visibleCount = lines.length, activeIndex = null } = {}) {
         return `
-            <section class="slide eq">
-              ${raw.data.map((d) => `<div>${d.content}</div>`).join("")}
-            </section>
-          `;
+          <section class="slide eq">
+            ${lines.map((l, i) => {
+          if (i >= visibleCount) return "";
+          const cls = i === activeIndex ? "is-active" : activeIndex !== null && i < activeIndex ? "is-dim" : "";
+          return `<div class="eq-line ${cls}">${l.content}</div>`;
+        }).join("")}
+          </section>
+        `;
       }
     });
   }
 };
 
-// node_modules/taleem-slides/src/slides/SvgPointerSlide.js
-var SvgPointerSlide = {
-  type: "svgPointer",
-  fromJSON(raw) {
-    const svg = raw.data?.find((d) => d.name === "svg")?.content;
-    if (!svg) throw new Error("svgPointer: svg required");
-    return Object.freeze({
-      type: "svgPointer",
-      render() {
-        return `
-            <section class="slide svgPointer">
-              ${svg}
-            </section>
-          `;
-      }
-    });
-  }
-};
-
-// node_modules/taleem-slides/src/registry.js
-var registry = {
+// node_modules/taleem-slides/src/SlideTemplates.js
+var SlideTemplates = {
   titleSlide: TitleSlide,
   titleAndSubtitle: TitleAndSubtitleSlide,
   titleAndPara: TitleAndParaSlide,
@@ -532,114 +581,30 @@ var registry = {
   quoteWithImage: QuoteWithImageSlide,
   cornerWordsSlide: CornerWordsSlide,
   contactSlide: ContactSlide,
-  eq: EqSlide,
-  svgPointer: SvgPointerSlide
+  eq: EqSlide
 };
 
-// node_modules/taleem-slides/src/slideManager/SlideManager.js
-var SlideManager = class {
-  #slides;
-  constructor(slides) {
-    if (!Array.isArray(slides)) {
-      throw new Error("SlideManager: slides must be an array");
-    }
-    this.#slides = slides;
+// node_modules/taleem-slides/src/getSlideTemplate.js
+function getSlideTemplate(type) {
+  const template = SlideTemplates[type];
+  if (!template) {
+    throw new Error(`Unknown slide template type "${type}"`);
   }
-  /**
-   * Render a single slide by index.
-   *
-   * @param {number} index
-   * @param {number} [showAt]
-   * @returns {string} HTML
-   */
-  renderSlide(index, showAt) {
-    const slide = this.#slides[index];
-    if (!slide) {
-      throw new Error(`SlideManager: invalid slide index ${index}`);
-    }
-    if (typeof slide.render !== "function") {
-      throw new Error(
-        `SlideManager: slide at index ${index} has no render() method`
-      );
-    }
-    return slide.render(showAt);
-  }
-  /**
-   * Render all slides as a static HTML dump.
-   *
-   * @returns {string} HTML
-   */
-  renderAll() {
-    return this.#slides.map((slide, index) => {
-      if (typeof slide.render !== "function") {
-        throw new Error(
-          `SlideManager: slide at index ${index} has no render() method`
-        );
-      }
-      return slide.render();
-    }).join("\n");
-  }
-};
-
-// node_modules/taleem-slides/src/interpreter/slideBuilder.js
-function slideBuilder(deckV1Json) {
-  if (!deckV1Json || typeof deckV1Json !== "object") {
-    throw new Error("slideBuilder: input must be an object");
-  }
-  if (deckV1Json.version !== "deck-v1") {
-    throw new Error(
-      `slideBuilder: unsupported deck version "${deckV1Json.version}"`
-    );
-  }
-  if (!Array.isArray(deckV1Json.deck)) {
-    throw new Error("slideBuilder: deck must be an array");
-  }
-  const slides = deckV1Json.deck.map((rawSlide, index) => {
-    if (!rawSlide || typeof rawSlide !== "object") {
-      throw new Error(`slideBuilder: slide ${index} is not an object`);
-    }
-    const { type } = rawSlide;
-    if (!type || typeof type !== "string") {
-      throw new Error(`slideBuilder: slide ${index} has no valid type`);
-    }
-    const builder = registry[type];
-    if (!builder) {
-      throw new Error(
-        `slideBuilder: unsupported slide type "${type}" at index ${index}`
-      );
-    }
-    try {
-      return builder.fromJSON(rawSlide, index);
-    } catch (err) {
-      throw new Error(
-        `slideBuilder: failed to build slide "${type}" at index ${index}
-${err.message}`
-      );
-    }
-  });
-  slides.forEach(Object.freeze);
-  Object.freeze(slides);
-  return new SlideManager(slides);
+  return template;
 }
 
-// src/release.js
-var TALEEM_BROWSER_VERSION = "0.1.3";
-var TALEEM_CSS_URL = "https://github.com/bilza2023/taleem-browser/releases/download/v0.1.3/taleem.css";
-
-// src/index.js
+// src/createBrowser.js
 function createTaleemBrowser({ mount, deck }) {
   if (!mount) {
     throw new Error("taleem-browser: mount is required");
   }
   if (!deck || !Array.isArray(deck.deck)) {
-    throw new Error("taleem-browser: valid deck object required");
+    throw new Error("taleem-browser: valid deck-v1 required");
   }
   const root = typeof mount === "string" ? document.querySelector(mount) : mount;
   if (!root) {
-    throw new Error("taleem-browser: mount element not found");
+    throw new Error("taleem-browser: mount not found");
   }
-  let currentIndex = 0;
-  const total = deck.deck.length;
   root.innerHTML = `
     <div class="taleem-browser-bg"></div>
     <div class="taleem-browser-slide"></div>
@@ -647,45 +612,27 @@ function createTaleemBrowser({ mount, deck }) {
   const bgEl = root.querySelector(".taleem-browser-bg");
   const slideEl = root.querySelector(".taleem-browser-slide");
   applyBackground(bgEl, deck.background);
-  const manager = slideBuilder(deck);
-  function render() {
-    slideEl.innerHTML = manager.renderSlide(currentIndex);
-  }
-  function next() {
-    if (currentIndex < total - 1) {
-      currentIndex++;
-      render();
+  const slides = deck.deck.map((slideJSON, i) => {
+    if (!slideJSON.type) {
+      throw new Error(`taleem-browser: slide ${i} missing type`);
     }
-  }
-  function prev() {
-    if (currentIndex > 0) {
-      currentIndex--;
-      render();
+    const Template = getSlideTemplate(slideJSON.type);
+    if (!Template) {
+      throw new Error(`taleem-browser: unknown slide type "${slideJSON.type}"`);
     }
-  }
-  function goTo(index) {
+    return Template.fromJSON(slideJSON);
+  });
+  const total = slides.length;
+  function render(index, renderState = {}) {
     if (index < 0 || index >= total) return;
-    currentIndex = index;
-    render();
+    const slide = slides[index];
+    slideEl.innerHTML = slide.render(renderState);
   }
-  function getIndex() {
-    return currentIndex;
-  }
-  function getTotal() {
-    return total;
-  }
-  function destroy() {
-    root.innerHTML = "";
-  }
-  render();
   return {
-    next,
-    prev,
-    goTo,
-    getIndex,
-    getTotal,
     render,
-    destroy
+    getTotal() {
+      return total;
+    }
   };
 }
 function applyBackground(el, bg = {}) {
@@ -699,7 +646,5 @@ function applyBackground(el, bg = {}) {
   el.style.opacity = bg.backgroundImageOpacity !== void 0 ? bg.backgroundImageOpacity : 1;
 }
 export {
-  TALEEM_BROWSER_VERSION,
-  TALEEM_CSS_URL,
   createTaleemBrowser
 };
