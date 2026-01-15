@@ -12,6 +12,23 @@ No timing.
 No autoplay.  
 No hidden state.
 
+
+---
+
+## 🌐 Live Docs, Demo & Reference (START HERE)
+
+👉 **https://bilza2023.github.io/taleem**
+
+This site is the **official reference** for:
+
+- all supported slide types
+- visual behavior
+- real rendered output
+- examples and demos
+
+If something is unclear in this README,  
+**the website is the final authority**.
+
 ---
 
 ## Why taleem-browser exists
