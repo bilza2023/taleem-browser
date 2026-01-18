@@ -6,10 +6,9 @@ export const TableSlide = {
     const rows = raw.data;
 
     if (!Array.isArray(rows) || rows.length === 0) {
-      throw new Error("table: requires at least one row");
+      console.warn("Empty table skipped", raw);
+      return null;
     }
-
-    const [headers, ...body] = rows;
 
     return Object.freeze({
       type: "table",
@@ -17,13 +16,8 @@ export const TableSlide = {
       render() {
         return `
           <table class="slide table">
-            <thead>
-              <tr>
-                ${headers.map(h => `<th>${h}</th>`).join("")}
-              </tr>
-            </thead>
             <tbody>
-              ${body
+              ${rows
                 .map(
                   row =>
                     `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`
