@@ -3,12 +3,13 @@ export const TableSlide = {
   type: "table",
 
   fromJSON(raw) {
-    const headers = raw.data?.find(d => d.name === "header")?.content;
-    const rows = raw.data?.find(d => d.name === "row")?.content;
+    const rows = raw.data;
 
-    if (!headers || !rows?.length) {
-      throw new Error("table: requires headers and at least one row");
+    if (!Array.isArray(rows) || rows.length === 0) {
+      throw new Error("table: requires at least one row");
     }
+
+    const [headers, ...body] = rows;
 
     return Object.freeze({
       type: "table",
@@ -17,13 +18,15 @@ export const TableSlide = {
         return `
           <table class="slide table">
             <thead>
-              <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
+              <tr>
+                ${headers.map(h => `<th>${h}</th>`).join("")}
+              </tr>
             </thead>
             <tbody>
-              ${rows
+              ${body
                 .map(
-                  r =>
-                    `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`
+                  row =>
+                    `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`
                 )
                 .join("")}
             </tbody>
